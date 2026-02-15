@@ -3,6 +3,34 @@ import { ClientService } from "./clients.services";
 import { ClientRepository } from "./clients.repositories";
 import { z } from "zod";
 
+// ----------------------------
+// Schemas de validación
+// ----------------------------
+
+// GET /clients/:id
+const clientIdParamsSchema = z.object({
+    id: z.string().trim().min(1, "El id es obligatorio"),
+});
+
+// POST /clients
+const createClientSchema = z.object({
+    name: z.string().trim().min(1, "El nombre es obligatorio"),
+});
+
+// PUT /clients/:id
+const updateClientParamsSchema = z.object({
+    id: z.string().trim().min(1, "El id es obligatorio"),
+});
+
+const updateClientBodySchema = z.object({
+    name: z.string().trim().min(1, "El nombre es obligatorio"),
+});
+
+// DELETE /clients/:id
+const deleteClientParamsSchema = z.object({
+    id: z.string().trim().min(1, "El id es obligatorio"),
+});
+
 /**
  * Routes/Handlers for Clients feature
  */
@@ -10,34 +38,6 @@ export async function clientsHandlers(app: FastifyInstance) {
     // Repo + Service wiring
     const repo = new ClientRepository();
     const service = new ClientService(repo);
-
-    // ----------------------------
-    // Schemas
-    // ----------------------------
-
-    // GET /clients/:id
-    const clientIdParamsSchema = z.object({
-        id: z.string().trim().min(1, "El id es obligatorio"),
-    });
-
-    // POST /clients
-    const createClientSchema = z.object({
-        name: z.string().trim().min(1, "El nombre es obligatorio"),
-    });
-
-    // PUT /clients/:id
-    const updateClientParamsSchema = z.object({
-        id: z.string().trim().min(1, "El id es obligatorio"),
-    });
-
-    const updateClientBodySchema = z.object({
-        name: z.string().trim().min(1, "El nombre es obligatorio"),
-    });
-
-    // DELETE /clients/:id
-    const deleteClientParamsSchema = z.object({
-        id: z.string().trim().min(1, "El id es obligatorio"),
-    });
 
     // ----------------------------
     // GET /clients

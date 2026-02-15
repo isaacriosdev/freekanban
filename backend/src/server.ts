@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import { errorHandler } from "./shared/errors";
 import { clientsHandlers } from "./features/clients/clients.handlers";
 import { projectHandler } from "./features/projects/projects.handlers";
+import { tagsHandlers } from "./features/tags/tags.handlers";
+import { commentsHandlers } from "./features/comments/comments.handlers";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -17,6 +19,8 @@ async function start() {
     // Register routes
     await app.register(clientsHandlers);
     await app.register(projectHandler);
+    await app.register(tagsHandlers);
+    await app.register(commentsHandlers);
 
     try {
         await app.listen({ port: PORT, host: HOST });

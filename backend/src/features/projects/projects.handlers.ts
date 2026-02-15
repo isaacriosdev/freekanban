@@ -4,40 +4,40 @@ import { ProjectRepository } from "./projects.repositories";
 import { ProjectService } from "./projects.services";
 import { z } from "zod";
 
+// ----------------------------
+// Schemas de validación
+// ----------------------------
+
+// GET /clients/:clientId/projects
+const clientIdParamsSchema = z.object({
+    clientId: z.string().trim().min(1, "El clientId es obligatorio"),
+});
+
+// POST /projects
+const createProjectSchema = z.object({
+    name: z.string().trim().min(1, "El nombre es obligatorio"),
+    clientId: z.string().trim().min(1, "El clientId es obligatorio"),
+});
+
+// PUT /clients/:clientId/projects/:id
+const updateProjectParamsSchema = z.object({
+    clientId: z.string().trim().min(1),
+    id: z.string().trim().min(1),
+});
+
+const updateProjectBodySchema = z.object({
+    name: z.string().trim().min(1, "El nombre es obligatorio"),
+});
+
+// DELETE /projects/:id
+const deleteProjectParamsSchema = z.object({
+    id: z.string().trim().min(1, "El id es obligatorio"),
+});
+
 export async function projectHandler(app: FastifyInstance) {
     const projectRepo = new ProjectRepository();
     const clientRepo = new ClientRepository();
     const service = new ProjectService(clientRepo, projectRepo);
-
-    // ----------------------------
-    // Schemas
-    // ----------------------------
-
-    // GET /clients/:clientId/projects
-    const clientIdParamsSchema = z.object({
-        clientId: z.string().trim().min(1, "El clientId es obligatorio"),
-    });
-
-    // POST /projects
-    const createProjectSchema = z.object({
-        name: z.string().trim().min(1, "El nombre es obligatorio"),
-        clientId: z.string().trim().min(1, "El clientId es obligatorio"),
-    });
-
-    // PUT /clients/:clientId/projects/:id
-    const updateProjectParamsSchema = z.object({
-        clientId: z.string().trim().min(1),
-        id: z.string().trim().min(1),
-    });
-
-    const updateProjectBodySchema = z.object({
-        name: z.string().trim().min(1, "El nombre es obligatorio"),
-    });
-
-    // DELETE /projects/:id
-    const deleteProjectParamsSchema = z.object({
-        id: z.string().trim().min(1, "El id es obligatorio"),
-    });
 
     // ----------------------------
     // GET /projects
