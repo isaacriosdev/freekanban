@@ -2,40 +2,41 @@ import { ProjectRepository } from "./projects.repositories";
 import { ClientRepository } from "../clients/clients.repositories";
 import { Project, Prisma } from "../../../generated/prisma";
 import { capitalize } from "../../utils/string";
+import { NotFoundError, ConflictError } from "../../shared/errors";
 
 export class ProjectService {
     constructor(
         private clientRepository: ClientRepository,
         private projectRepository: ProjectRepository
-    ) {}
+    ) { }
 
     // Funciones de obtencion
 
-   async getAllProjects(): Promise<Project[]> {
-       return this.projectRepository.getAllProjects();
-   }
+    async getAllProjects(): Promise<Project[]> {
+        return this.projectRepository.getAllProjects();
+    }
 
-   async getProjectsByClient( clientId: string ): Promise<Project[]> {
-       const existingClient = await this.clientRepository.getClientById(clientId);
+    async getProjectsByClient(clientId: string): Promise<Project[]> {
+        const existingClient = await this.clientRepository.getClientById(clientId);
 
-       if (!existingClient) {
-           throw new Error("Cliente no existe")
-       }
+        if (!existingClient) {
+            throw new NotFoundError("Cliente", clientId);
+        }
 
-       return this.projectRepository.getProjectsByClient(
-           clientId
-       );
-   }
+        return this.projectRepository.getProjectsByClient(
+            clientId
+        );
+    }
 
-   // Funciones de creacion
-   
+    // Funciones de creacion
+
     async createProject(data: Prisma.ProjectUncheckedCreateInput): Promise<Project> {
         const normalizedName = capitalize(data.name);
 
         const duplicate = await this.projectRepository.getProjectByClient(data.clientId, normalizedName);
 
         if (duplicate) {
-            throw new Error("Proyecto ya existe en este cliente");
+            throw new ConflictError("Proyecto", "este nombre en el cliente");
         }
 
 
@@ -46,40 +47,40 @@ export class ProjectService {
     }
 
 
-   // funciones de actualizacion
+    // funciones de actualizacion
 
-   async updateProject( clientId: string, id: string, data: { name: string }): Promise<Project>{
-       const normalizedName = capitalize(data.name);
-       const existingProject = await this.projectRepository.getProjectById(id);
+    async updateProject(clientId: string, id: string, data: { name: string }): Promise<Project> {
+        const normalizedName = capitalize(data.name);
+        const existingProject = await this.projectRepository.getProjectById(id);
 
-       if (!existingProject) {
-           throw new Error('Proyecto no existe')
-       }
-        
-       const duplicate = await this.projectRepository.getProjectByClient(clientId, normalizedName);
+        if (!existingProject) {
+            throw new NotFoundError("Proyecto", id);
+        }
+
+        const duplicate = await this.projectRepository.getProjectByClient(clientId, normalizedName);
 
 
-       if (duplicate && duplicate.id !== id) {
-           throw new Error('El projecto ya existe en este cliente')
-       }
+        if (duplicate && duplicate.id !== id) {
+            throw new ConflictError("Proyecto", "este nombre en el cliente");
+        }
 
-       return this.projectRepository.updateProject(id, {
-           name: normalizedName,
-       });
-   }
+        return this.projectRepository.updateProject(id, {
+            name: normalizedName,
+        });
+    }
 
-   // funciones de eliminacion
-   
-   async deleteProject( id: string ): Promise<void> {
-       const existingProject = await this.projectRepository.getProjectById(id);
+    // funciones de eliminacion
 
-       if (!existingProject) {
-           throw new Error('Projecto no existe')
-       }
+    async deleteProject(id: string): Promise<void> {
+        const existingProject = await this.projectRepository.getProjectById(id);
 
-       await this.projectRepository.deleteProject(id);
+        if (!existingProject) {
+            throw new NotFoundError("Proyecto", id);
+        }
 
-   }
+        await this.projectRepository.deleteProject(id);
+
+    }
 
 }
 

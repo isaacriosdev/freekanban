@@ -1,9 +1,10 @@
 import { ClientRepository } from "./clients.repositories";
 import { Client, Prisma } from "../../../generated/prisma";
 import { capitalize } from "../../utils/string";
+import { NotFoundError, ConflictError } from "../../shared/errors";
 
 export class ClientService {
-    constructor(private clientRepository: ClientRepository) {}
+    constructor(private clientRepository: ClientRepository) { }
 
     // Obtener todos los clientes
     async getAllClients(): Promise<Client[]> {
@@ -15,10 +16,10 @@ export class ClientService {
         const normalizedName = capitalize(clientData.name);
 
         const existingClient =
-        await this.clientRepository.getClientByName(normalizedName);
+            await this.clientRepository.getClientByName(normalizedName);
 
         if (existingClient) {
-        throw new Error("Cliente ya existe");
+            throw new ConflictError("Cliente", "este nombre");
         }
 
         return this.clientRepository.createClient({
@@ -32,7 +33,7 @@ export class ClientService {
         const existingClient = await this.clientRepository.getClientById(id);
 
         if (!existingClient) {
-            throw new Error("Cliente no existe");
+            throw new NotFoundError("Cliente", id);
         }
 
         return this.clientRepository.updateClient(id, {
@@ -45,7 +46,7 @@ export class ClientService {
         const existingClient = await this.clientRepository.getClientById(id);
 
         if (!existingClient) {
-            throw new Error("El cliente no existe.");
+            throw new NotFoundError("Cliente", id);
         }
 
         await this.clientRepository.deleteClient(id);

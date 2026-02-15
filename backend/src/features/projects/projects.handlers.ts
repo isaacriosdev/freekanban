@@ -4,7 +4,7 @@ import { ProjectRepository } from "./projects.repositories";
 import { ProjectService } from "./projects.services";
 import { z } from "zod";
 
-export async function projectHandler(app: FastifyInstance){ 
+export async function projectHandler(app: FastifyInstance) {
     const projectRepo = new ProjectRepository();
     const clientRepo = new ClientRepository();
     const service = new ProjectService(clientRepo, projectRepo);
@@ -42,7 +42,7 @@ export async function projectHandler(app: FastifyInstance){
     // ----------------------------
     // GET /projects
     // ----------------------------
-  
+
     app.get("/projects", async () => {
         return service.getAllProjects;
     });
@@ -60,18 +60,8 @@ export async function projectHandler(app: FastifyInstance){
 
         const { clientId } = parsed.data;
 
-        // 2. Lógica service
-        try {
-            const projects = await service.getProjectsByClient(clientId);
-            return reply.status(200).send(projects);
-
-        } catch (err: any) {
-            if (err.message === "Cliente no existe") {
-                return reply.status(404).send({ error: err.message });
-            }
-
-            throw err; // Fastify maneja el 500
-        }
+        const projects = await service.getProjectsByClient(clientId);
+        return reply.status(200).send(projects);
     });
 
     // ----------------------------
@@ -82,33 +72,25 @@ export async function projectHandler(app: FastifyInstance){
         const parsed = createProjectSchema.safeParse(req.body);
 
         if (!parsed.success) {
-        return reply.status(400).send({
-            error: "Validation error",
-            issues: parsed.error.issues,
+            return reply.status(400).send({
+                error: "Validation error",
+                issues: parsed.error.issues,
             });
         }
 
-        try {
-            const project = await service.createProject(parsed.data);
-            return reply.status(201).send(project);
-        } catch (err: any) {
-            if (err.message === "Proyecto ya existe en este cliente") {
-                return reply.status(409).send({ error: err.message });
-            }
-
-            throw err;
-        }
+        const project = await service.createProject(parsed.data);
+        return reply.status(201).send(project);
     });
 
     // ----------------------------
     // PUT /projects
     // ----------------------------
 
-    app.put<{ 
-    
+    app.put<{
+
         Params: { clientId: string; id: string };
-        Body: { name: string};
-        
+        Body: { name: string };
+
     }>("/clients/:clientId/projects/:id", async (req, reply) => {
 
 
@@ -132,20 +114,8 @@ export async function projectHandler(app: FastifyInstance){
             });
         }
 
-        try {
-            const updated = await service.updateProject(clientId, id, parsedBody.data);
-            return reply.send(updated);
-        } catch (err: any) {
-            if (err.message === "Proyecto no existe") {
-                return reply.status(404).send({ error: err.message });
-            }
-
-            if (err.message === "El projecto ya existe en este cliente") {
-                return reply.status(409).send({ error: err.message });
-            }
-
-            throw err;
-        }
+        const updated = await service.updateProject(clientId, id, parsedBody.data);
+        return reply.send(updated);
     });
 
 
@@ -165,16 +135,8 @@ export async function projectHandler(app: FastifyInstance){
 
         const { id } = req.params;
 
-        try {
-            await service.deleteProject(id);
-            return reply.status(204).send();
-        } catch (err: any) {
-            if (err.message === "Projecto no existe.") {
-                return reply.status(404).send({ error: err.message });
-            }
-
-            throw err;
-        }
+        await service.deleteProject(id);
+        return reply.status(204).send();
     });
 
 }

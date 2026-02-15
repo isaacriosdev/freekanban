@@ -15,18 +15,34 @@ export async function clientsHandlers(app: FastifyInstance) {
     // Schemas
     // ----------------------------
 
+    // GET /clients/:id
+    const clientIdParamsSchema = z.object({
+        id: z.string().trim().min(1, "El id es obligatorio"),
+    });
+
+    // POST /clients
     const createClientSchema = z.object({
         name: z.string().trim().min(1, "El nombre es obligatorio"),
     });
 
-    const updateClientSchema = z.object({
+    // PUT /clients/:id
+    const updateClientParamsSchema = z.object({
+        id: z.string().trim().min(1, "El id es obligatorio"),
+    });
+
+    const updateClientBodySchema = z.object({
         name: z.string().trim().min(1, "El nombre es obligatorio"),
+    });
+
+    // DELETE /clients/:id
+    const deleteClientParamsSchema = z.object({
+        id: z.string().trim().min(1, "El id es obligatorio"),
     });
 
     // ----------------------------
     // GET /clients
     // ----------------------------
-  
+
     app.get("/clients", async () => {
         return service.getAllClients();
     });
@@ -34,72 +50,69 @@ export async function clientsHandlers(app: FastifyInstance) {
     // ----------------------------
     // POST /clients
     // ----------------------------
-  
+
     app.post("/clients", async (req, reply) => {
         const parsed = createClientSchema.safeParse(req.body);
 
         if (!parsed.success) {
-        return reply.status(400).send({
-            error: "Validation error",
-            issues: parsed.error.issues,
+            return reply.status(400).send({
+                error: "Validation error",
+                issues: parsed.error.issues,
             });
         }
 
-        try {
-            const client = await service.createClient(parsed.data);
-            return reply.status(201).send(client);
-        } catch (err: any) {
-            if (err.message === "Cliente ya existe") {
-                return reply.status(409).send({ error: err.message });
-            }
-
-            throw err;
-        }
+        const client = await service.createClient(parsed.data);
+        return reply.status(201).send(client);
     });
 
     // ----------------------------
     // PUT /clients/:id
     // ----------------------------
-  
-    app.put<{ Params: { id: string } }>("/clients/:id", async (req, reply) => {
-        const { id } = req.params;
 
-        const parsed = updateClientSchema.safeParse(req.body);
+    app.put<{ Params: { id: string }; Body: { name: string } }>("/clients/:id", async (req, reply) => {
+        // Validar params
+        const parsedParams = updateClientParamsSchema.safeParse(req.params);
 
-        if (!parsed.success) {
+        if (!parsedParams.success) {
             return reply.status(400).send({
-            error: "Validation error",
-            issues: parsed.error.issues,
+                error: "Validation error",
+                issues: parsedParams.error.issues,
             });
         }
 
-        try {
-            const updated = await service.updateClient(id, parsed.data);
-            return reply.send(updated);
-        } catch (err: any) {
-            if (err.message === "Cliente no existe") {
-                return reply.status(404).send({ error: err.message });
-            }
+        const { id } = parsedParams.data;
 
-            throw err;
+        // Validar body
+        const parsedBody = updateClientBodySchema.safeParse(req.body);
+
+        if (!parsedBody.success) {
+            return reply.status(400).send({
+                error: "Validation error",
+                issues: parsedBody.error.issues,
+            });
         }
+
+        const updated = await service.updateClient(id, parsedBody.data);
+        return reply.send(updated);
     });
 
     // ----------------------------
     // DELETE /clients/:id
     // ----------------------------
     app.delete<{ Params: { id: string } }>("/clients/:id", async (req, reply) => {
-        const { id } = req.params;
+        // Validar params
+        const parsed = deleteClientParamsSchema.safeParse(req.params);
 
-        try {
-            await service.deleteClient(id);
-            return reply.status(204).send();
-        } catch (err: any) {
-            if (err.message === "El cliente no existe.") {
-                return reply.status(404).send({ error: err.message });
-            }
-
-            throw err;
+        if (!parsed.success) {
+            return reply.status(400).send({
+                error: "Validation error",
+                issues: parsed.error.issues,
+            });
         }
+
+        const { id } = parsed.data;
+
+        await service.deleteClient(id);
+        return reply.status(204).send();
     });
 }
