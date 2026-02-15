@@ -11,9 +11,7 @@ export class ClientService {
     }
 
     // Crear cliente (asume input validado en handler)
-    async createClient(
-        clientData: Prisma.ClientCreateInput
-    ): Promise<Client> {
+    async createClient(clientData: Prisma.ClientCreateInput): Promise<Client> {
         const normalizedName = capitalize(clientData.name);
 
         const existingClient =
@@ -30,10 +28,7 @@ export class ClientService {
     }
 
     // Actualizar cliente (asume input validado en handler)
-    async updateClient(
-        id: string,
-        data: { name: string }
-    ): Promise<Client> {
+    async updateClient(id: string, data: { name: string }): Promise<Client> {
         const existingClient = await this.clientRepository.getClientById(id);
 
         if (!existingClient) {
